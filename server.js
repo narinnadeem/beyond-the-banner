@@ -1,21 +1,14 @@
 // Beyond the Banner - backend (Express + JSON file storage)
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin';          // change before sharing the link!
-const DB_FILE = path.join(__dirname, 'data', 'db.json');
 
-// ---------- tiny JSON "database" ----------
-   fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
+// ---------- in-memory storage (no files; download the CSV from the admin page regularly) ----------
 let db = { participants: {} };
-if (fs.existsSync(DB_FILE)) db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-   const save = () => {
-     try { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
-     catch (e) { console.error('save failed:', e.message); }
-   };
+const save = () => {};
 const get = (id) => db.participants[id];
 
 const app = express();
@@ -51,7 +44,7 @@ function logTrace(id, tracker, data, req) {
 }
 
 app.post('/api/track/:tracker', (req, res) => {
-  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body;
+  let body = req.body; if (typeof body === 'string') { try { body = JSON.parse(body || '{}'); } catch (e) { body = {}; } }
   const { id, ...data } = body;
   const allowed = ['analytics', 'fingerprint'];
   if (!allowed.includes(req.params.tracker)) return res.sendStatus(404);
@@ -150,9 +143,6 @@ app.get('/api/admin/export.csv', guard, (req, res) => {
   res.type('text/csv').attachment('responses.csv').send(rows.map(r => r.map(esc).join(',')).join('\n'));
 });
 
-   app.use((err, req, res, next) => {
-     console.error('request error:', err);
-     res.status(500).json({ error: err.message });
-   });
+app.use((err, req, res, next) => { console.error('request error:', err); res.status(500).json({ error: err.message }); });
 
 app.listen(PORT, () => console.log(`Beyond the Banner running at http://localhost:${PORT}  (admin: /admin.html?key=${ADMIN_KEY})`));
