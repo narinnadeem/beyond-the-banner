@@ -12,7 +12,10 @@ const DB_FILE = path.join(__dirname, 'data', 'db.json');
    fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
 let db = { participants: {} };
 if (fs.existsSync(DB_FILE)) db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-const save = () => fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
+   const save = () => {
+     try { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
+     catch (e) { console.error('save failed:', e.message); }
+   };
 const get = (id) => db.participants[id];
 
 const app = express();
@@ -146,5 +149,10 @@ app.get('/api/admin/export.csv', guard, (req, res) => {
   ]));
   res.type('text/csv').attachment('responses.csv').send(rows.map(r => r.map(esc).join(',')).join('\n'));
 });
+
+   app.use((err, req, res, next) => {
+     console.error('request error:', err);
+     res.status(500).json({ error: err.message });
+   });
 
 app.listen(PORT, () => console.log(`Beyond the Banner running at http://localhost:${PORT}  (admin: /admin.html?key=${ADMIN_KEY})`));
