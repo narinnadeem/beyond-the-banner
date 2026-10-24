@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Results</title><link rel="stylesheet" href="style.css"><style>main{max-width:860px}</style></head><body><main>
+<h1>Study results</h1><p class="muted" id="count"></p>
+<div class="card"><table id="tbl"></table></div>
+<h2>"No banner" means…</h2><div class="card"><table id="dist"></table></div>
+<h2>Participant quotes</h2><div id="quotes"></div>
+<p><a id="csv" href="#">Download all responses (CSV)</a></p>
+<script>
+const key=new URLSearchParams(location.search).get('key')||'';
+document.getElementById('csv').href='/api/admin/export.csv?key='+encodeURIComponent(key);
+const f=v=>v===null?'–':v, esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+fetch('/api/admin/results?key='+encodeURIComponent(key)).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
+  count.textContent=`${d.completed} completed of ${d.started} started`;
+  const rows=[['Participants (n)','n',''],['Misconception rate: "no banner = safe"','misconceptionRate','%'],
+    ['Believed site did not record them','thoughtNotRecorded','%'],['Assumed browser protects them','assumedProtection','%'],
+    ['Avg. surprise (1–5)','avgSurprise',''],['Avg. concern (1–5)','avgConcern','']];
+  tbl.innerHTML='<tr><th>Measure</th><th>Technical</th><th>General</th><th>Overall</th></tr>'+
+    rows.map(([l,k,u])=>`<tr><td>${l}</td>${['technical','general','overall'].map(g=>`<td>${f(d[g][k])}${d[g][k]!==null?u:''}</td>`).join('')}</tr>`).join('');
+  const names={safe:'Safe, no tracking',broken:'Banner is broken',secret:'May be secretly tracking',unsure:'Never thought about it'};
+  dist.innerHTML=Object.entries(d.q3Distribution).map(([k,v])=>`<tr><td>${names[k]||k}</td><td>${v}</td></tr>`).join('')||'<tr><td>No data yet</td></tr>';
+  quotes.innerHTML=d.quotes.map(q=>`<div class="card">${esc(q.text)}<div class="muted">${q.cohort}</div></div>`).join('')||'<p class="muted">No quotes yet.</p>';
+}).catch(()=>document.querySelector('main').innerHTML='<h1>Access denied</h1><p>Add ?key=YOUR_ADMIN_KEY to the URL.</p>');
+</script></main></body></html>

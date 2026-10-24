@@ -1,0 +1,80 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quick questions</title><link rel="stylesheet" href="style.css"></head><body><main>
+
+<!-- PART 1: blind perception questions -->
+<section id="p1">
+  <h1>A few quick questions</h1>
+  <p class="muted">Answer from what you remember. There are no right or wrong answers.</p>
+  <fieldset><legend>1. Did the website you just used ask for your permission to track your activity?</legend>
+    <label class="opt"><input type="radio" name="q1" value="yes"> Yes</label>
+    <label class="opt"><input type="radio" name="q1" value="no"> No</label>
+    <label class="opt"><input type="radio" name="q1" value="dont_remember"> Don't remember</label></fieldset>
+  <fieldset><legend>2. Do you believe the website recorded your visit or personal data?</legend>
+    <label class="opt"><input type="radio" name="q2" value="yes"> Yes</label>
+    <label class="opt"><input type="radio" name="q2" value="no"> No</label>
+    <label class="opt"><input type="radio" name="q2" value="unsure"> Unsure</label></fieldset>
+  <fieldset><legend>3. When a website does not show a cookie banner, what does that usually mean to you?</legend>
+    <label class="opt"><input type="radio" name="q3" value="safe"> The site is safe and does no tracking</label>
+    <label class="opt"><input type="radio" name="q3" value="broken"> The banner is broken or did not load</label>
+    <label class="opt"><input type="radio" name="q3" value="secret"> The site may be tracking me without telling me</label>
+    <label class="opt"><input type="radio" name="q3" value="unsure"> I have never thought about it</label></fieldset>
+  <button id="b1" disabled>Continue</button>
+</section>
+
+<!-- PART 2: reveal + impact -->
+<section id="p2" class="hidden">
+  <div class="reveal" id="reveal"></div>
+  <fieldset><legend>How surprised are you by this?</legend>
+    <div class="scale" id="surprise"></div><div class="scale-ends"><span>Expected it</span><span>Completely surprised</span></div></fieldset>
+  <fieldset><legend>How concerned or powerless does this make you feel?</legend>
+    <div class="scale" id="concern"></div><div class="scale-ends"><span>Don't care</span><span>Very concerned / helpless</span></div></fieldset>
+  <fieldset><legend>Before today, did you believe your browser was automatically protecting you from this?</legend>
+    <label class="opt"><input type="radio" name="prot" value="yes"> Yes</label>
+    <label class="opt"><input type="radio" name="prot" value="no"> No</label>
+    <label class="opt"><input type="radio" name="prot" value="unsure"> Not sure</label></fieldset>
+  <fieldset><legend>How do you feel knowing websites can legally track you without showing any prompt?</legend>
+    <textarea id="fb" maxlength="2000"></textarea></fieldset>
+  <button id="b2" disabled>Submit</button>
+</section>
+
+<!-- Debrief -->
+<section id="p3" class="hidden">
+  <h1>Thank you</h1>
+  <p>This study was about whether people assume that "no cookie banner" means "no tracking". The trackers on the page were part of our test and were only used to show you the example above. Your data is used only for this class project.</p>
+  <p class="muted">What you can do: use a browser with tracker blocking on, add a content blocker, and review site permissions. You can close this tab now.</p>
+</section>
+
+<script>
+const pid=sessionStorage.getItem('pid'); if(!pid) location.href='index.html';
+const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:pid,...b})});
+const val=n=>(document.querySelector(`[name=${n}]:checked`)||{}).value;
+const show=id=>{document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');scrollTo(0,0)};
+
+// 5-point scales
+['surprise','concern'].forEach(n=>{
+  document.getElementById(n).innerHTML=[1,2,3,4,5].map(i=>`<label><input type="radio" name="${n}" value="${i}">${i}</label>`).join('');
+});
+const ready1=()=>document.getElementById('b1').disabled=!(val('q1')&&val('q2')&&val('q3'));
+const ready2=()=>document.getElementById('b2').disabled=!(val('surprise')&&val('concern')&&val('prot'));
+document.getElementById('p1').addEventListener('change',ready1);
+document.getElementById('p2').addEventListener('change',ready2);
+
+const labels={analytics:'Analytics tracker',fingerprint:'Device fingerprinting tracker',pixel:'Tracking pixel'};
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+document.getElementById('b1').onclick=async()=>{
+  await post('/api/survey/perception',{q1:val('q1'),q2:val('q2'),q3:val('q3')});
+  const t=await (await fetch('/api/trace/'+pid)).json();
+  document.getElementById('reveal').innerHTML=
+    `<h2>In reality, the page ran ${t.count} tracker${t.count===1?'':'s'} quietly in the background</h2>
+     <p>There was no banner and no prompt. Here is what each one sent to our server while you read:</p>`+
+    t.trackers.map(k=>`<div class="tracker"><strong>${labels[k.name]||esc(k.name)}</strong> <span class="muted">(${k.hits} report${k.hits===1?'':'s'})</span>
+      <code>${esc(Object.entries(k.collected).map(([a,b])=>a+': '+b).join('\n'))}</code></div>`).join('');
+  show('p2');
+};
+document.getElementById('b2').onclick=async()=>{
+  document.getElementById('b2').disabled=true;
+  await post('/api/survey/impact',{surprise:val('surprise'),concern:val('concern'),protection:val('prot'),feedback:document.getElementById('fb').value});
+  show('p3');
+};
+</script></main></body></html>

@@ -1,0 +1,8 @@
+{
+  "name": "beyond-the-banner",
+  "version": "1.0.0",
+  "description": "Web-task environment + survey for studying awareness of silent web tracking",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2" }
+}

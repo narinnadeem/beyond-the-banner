@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Browsing study</title><link rel="stylesheet" href="style.css"></head><body><main>
+<h1>A short browsing study</h1>
+<p>This takes about 7–10 minutes. You will read a short product review, choose an option, and answer a few questions.</p>
+<div class="card">
+  <p><strong>Before you start:</strong> we record your answers, the option you choose, and basic technical details your browser shares with this study site. Nothing identifies you by name. You can close this tab at any time. Afterwards, we will explain exactly what was recorded.</p>
+  <label class="opt"><input type="checkbox" id="consent"> I understand and agree to take part.</label>
+</div>
+<fieldset class="card"><legend>Which describes you better?</legend>
+  <label class="opt"><input type="radio" name="cohort" value="technical"> I study or work in computing or IT</label>
+  <label class="opt"><input type="radio" name="cohort" value="general"> I use the web every day but not in a technical role</label>
+</fieldset>
+<button id="go" disabled>Start the task</button>
+<script>
+const go=document.getElementById('go'),c=document.getElementById('consent');
+const ok=()=>go.disabled=!(c.checked&&document.querySelector('[name=cohort]:checked'));
+document.addEventListener('change',ok);
+go.onclick=async()=>{
+  const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({cohort:document.querySelector('[name=cohort]:checked').value})});
+  sessionStorage.setItem('pid',(await r.json()).id); location.href='article.html';
+};
+</script></main></body></html>

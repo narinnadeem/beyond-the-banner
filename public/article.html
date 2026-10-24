@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Two local laptop repair shops compared</title><link rel="stylesheet" href="style.css"></head><body><main>
+<p class="muted">Your task: spend 2–3 minutes reading, then decide which shop you would pick.</p>
+<h1>Two local laptop repair shops, compared</h1>
+<p class="muted">Review by the Campus Tech Desk</p>
+<h2>Byte Bay</h2>
+<p>Byte Bay is the cheaper option. Screen replacements start at a flat fee and most repairs are done in two days. The staff explain the problem in plain language and send photos of the work. The downside is a small waiting area and no weekend hours, so drop-offs must happen on weekdays.</p>
+<p>Warranty on parts is 90 days. Data is not backed up unless you ask, which adds a small charge.</p>
+<h2>FixForward</h2>
+<p>FixForward costs about a fifth more, but includes a free data backup with every repair and offers Saturday appointments. Turnaround is slower, usually four to five days, because parts are ordered after the diagnosis.</p>
+<p>Warranty on parts is 180 days, and the shop will re-check the laptop for free within a month.</p>
+<h2>The verdict</h2>
+<p>If speed and price matter most, Byte Bay is hard to beat. If your laptop holds work you cannot lose, or you can only visit at weekends, FixForward is the safer choice.</p>
+<fieldset class="card"><legend>Which shop would you pick?</legend>
+  <label class="opt"><input type="radio" name="choice" value="Byte Bay"> Byte Bay</label>
+  <label class="opt"><input type="radio" name="choice" value="FixForward"> FixForward</label>
+</fieldset>
+<button id="done" disabled>Finished task</button>
+
+<!-- Third-party style trackers: they load silently, no banner, no prompt -->
+<script src="t/analytics.js" async></script>
+<script src="t/fingerprint.js" async></script>
+<img src="" id="px" alt="" width="1" height="1" style="position:absolute;left:-9999px">
+<script>
+  const pid=sessionStorage.getItem('pid'); if(!pid) location.href='index.html';
+  document.getElementById('px').src='/t/pixel.gif?id='+pid;
+  const t0=Date.now(), btn=document.getElementById('done');
+  document.addEventListener('change',()=>btn.disabled=false);
+  btn.onclick=async()=>{
+    btn.disabled=true; window.__flushAnalytics&&window.__flushAnalytics();
+    await fetch('/api/task',{method:'POST',headers:{'Content-Type':'application/json'},keepalive:true,
+      body:JSON.stringify({id:pid,choice:document.querySelector('[name=choice]:checked').value,seconds:Math.round((Date.now()-t0)/1000)})});
+    setTimeout(()=>location.href='survey.html',400);
+  };
+</script></main></body></html>
