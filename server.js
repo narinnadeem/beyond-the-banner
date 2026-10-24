@@ -9,6 +9,7 @@ const ADMIN_KEY = process.env.ADMIN_KEY || 'admin';          // change before sh
 const DB_FILE = path.join(__dirname, 'data', 'db.json');
 
 // ---------- tiny JSON "database" ----------
+   fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
 let db = { participants: {} };
 if (fs.existsSync(DB_FILE)) db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
 const save = () => fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
